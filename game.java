@@ -49,6 +49,7 @@ public class game implements Runnable {
             save();
             System.exit(0);
         } else if (choice == 1) {
+            money = money+CPS;
             clear();
             main(args);
         } else if (choice == 2) {
@@ -84,7 +85,7 @@ public class game implements Runnable {
     }
       }
     public static Boolean displaying = false;
-
+walkffkas
     public static void clear() {
         System.out.print("\033[H\033[2J");  
         System.out.flush();  
