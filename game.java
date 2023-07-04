@@ -1,11 +1,19 @@
 package ccli;
-
+//exceptions
 import java.util.InputMismatchException;
-import java.util.Scanner;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
+
+//stat saving
+import java.io.File; 
+import java.io.FileWriter;
+
+import java.util.Scanner; //user input and stat reading
+
+//idle cookie gain
+import java.time.format.DateTimeFormatter;  
+import java.time.LocalDateTime;    
+
 
 public class game implements Runnable {
 
@@ -17,16 +25,21 @@ public class game implements Runnable {
     public static int cursorlvl = statgrab(new File("stats/cursorlvl"));
     public static int grandmalvl = statgrab(new File("stats/grandmalvl"));
     public static int farmlvl = statgrab(new File("stats/farmlvl"));
+    public static int minelvl = statgrab(new File("stats/minelvl"));
+
+
 
     //probably don't change these
     public static boolean init = true; //allows startup process to be run
     public static boolean calcps = true; //controls whether cps in calculated every second.
     public static boolean main; //used to determine if main menu is active
-    public static void display() {
+    public static boolean upgrade = false;
+    public static void display(String mode) {
+        if(main == true) {
         clear();
         System.out.print("player: ");
         System.out.println(playername());
-        System.out.print("money: ");
+        System.out.print("cookies: ");
         System.out.println(money);
         if (cursorlvl >= 1) {
         System.out.print("cursor: ");
@@ -40,8 +53,14 @@ public class game implements Runnable {
         System.out.print("farm: ");
         System.out.println(farmlvl);
         }
+        if(minelvl >= 1) {
+            System.out.print("mine: ");
+            System.out.println(minelvl);
+        }
         System.out.print("CPS: ");
         System.out.println(cps());
+        System.out.println("");
+        System.out.println("");
 
         System.out.println("Welcome to Cookie Clicker - cli edition");
         System.out.println("0: save and exit");
@@ -49,6 +68,31 @@ public class game implements Runnable {
         System.out.println("2: upgrade buildings");
         System.out.println("...");
         System.out.println("9: wipe save");
+    } else if (upgrade == true) {
+        clear();
+        
+        System.out.println("0: exit to menu");
+        if(money>= uniCost(15, cursorlvl)) {
+        System.out.println("~*1: Cursor: "+"cost: $"+uniCost(15, cursorlvl)+" owned: "+cursorlvl+"*~");
+        } else {
+        System.out.println("1: Cursor: "+"cost: $"+uniCost(15, cursorlvl)+" owned: "+cursorlvl);
+        } if(money>= uniCost(100, grandmalvl)) {
+        System.out.println("~*2: Grandma: "+"cost: $"+uniCost(100, grandmalvl)+" owned: "+grandmalvl+"*~");
+        } else {
+        System.out.println("2: Grandma: "+"cost: $"+uniCost(100, grandmalvl)+" owned: "+grandmalvl);
+        } if(money>= uniCost(1000, farmlvl)) {
+            System.out.println("~*3: Farm: "+"cost: $"+uniCost(1000, farmlvl)+" owned: "+farmlvl+"*~");
+        } else {
+        System.out.println("3: Farm: "+"cost: $"+uniCost(1000, farmlvl)+" owned: "+farmlvl);
+        } if(money>=uniCost(10000, minelvl)) {
+        System.out.println("~*4: Mine: "+"cost: $"+uniCost(10000, minelvl)+" owned: "+minelvl+"*~");
+        } else {
+        System.out.println("4: Mine: "+"cost: $"+uniCost(10000, minelvl)+" ownaed: "+minelvl);
+        }
+
+        System.out.println("you have:"+money+" cookies");
+        System.out.println("");
+    }
     }
     //settings
     public static Boolean autosave = true; //toggle whether the game automatically saves after each upgrade purchase (9/10 recommend)
@@ -75,7 +119,7 @@ public class game implements Runnable {
         } else if (choice == 9) {
             wipe();
                 }
-            
+
     }
 
     //
@@ -83,12 +127,14 @@ public class game implements Runnable {
         while (calcps == true) {
         money = Math.round(money+cps());
         if (main == true) {
-            display();
+            display("main");
+        }
+        if (upgrade == true) {
+            display("upgrade");
         }
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         }
@@ -100,27 +146,23 @@ public class game implements Runnable {
 
     
     public static void upgrade() {
-        clear();
-        
-        System.out.println("0: exit to menu");
-        System.out.println("1: cursor: "+"cost: "+uniCost(1, cursorlvl)+" owned: "+cursorlvl);
-        System.out.println("2: grandma: "+"cost: "+uniCost(30, grandmalvl)+" owned: "+grandmalvl);
-        System.out.println("3: farm: "+"cost: "+uniCost(60, farmlvl)+" owned: "+farmlvl);
-
-        System.out.println("you have: $"+money+ "note: money amount not updated /s");
-        System.out.println("");
+        upgrade = true;
         try {
-        int choice = sc.nextInt(4);
+        int choice = sc.nextInt(5);
         if (choice == 0) {
             main(null);
         } else if (choice == 1) {
-            buy(cursorlvl, 1);
+            buy(cursorlvl, 15);
             cursorlvl++;
         } else if (choice == 2) {
-            buy(grandmalvl, 30);
+            buy(grandmalvl, 100);
             grandmalvl++;
         } else if (choice == 3) {
-            buy(cursorlvl, 60);
+            buy(farmlvl, 1000);
+            farmlvl++;
+        } else if (choice == 4) {
+            buy(minelvl, 10000);
+            minelvl++;
         }
     } catch (InputMismatchException e) {
         System.out.println("error: input invalid");
@@ -197,13 +239,6 @@ public class game implements Runnable {
             System.exit(0);
 
         }
-
-
-
-
-
-
-
         System.exit(0);
     }
 
@@ -255,7 +290,7 @@ public class game implements Runnable {
     //calculate cps
     public static double cps() {
         
-        double cps0 = (cursorlvl*1)+(grandmalvl*1.2); 
+        double cps0 = (cursorlvl*1)+(grandmalvl*1.2)+(farmlvl*1.4)+(minelvl*1.6); 
         return cps0;
     }
 
@@ -266,7 +301,7 @@ public class game implements Runnable {
     }
     //calculate building cost
     public static int uniCost(int mod, int lev) {
-        int cost0 = mod+(lev*2);
+        int cost0 = mod+lev*10;
         return cost0;
     }
 
